@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>学校全景漫游 - Sci-Fi 模式</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
+
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: "Orbitron", sans-serif;
+        background: #0a0a1f;
+        color: #00f0ff;
+        overflow: hidden;
+      }
+
+      #container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, #0a0a1f, #000814);
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition:
+          opacity 1.2s ease,
+          transform 1.2s ease;
+      }
+
+      .building-btn {
+        position: absolute;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #00f0ff;
+        background: rgba(10, 20, 50, 0.4);
+        border: 1px solid rgba(0, 240, 255, 0.5);
+        border-radius: 8px;
+        backdrop-filter: blur(8px);
+        box-shadow:
+          0 0 15px rgba(0, 240, 255, 0.4),
+          inset 0 0 10px rgba(0, 240, 255, 0.2);
+        transition: all 0.4s ease;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        text-shadow: 0 0 8px rgba(0, 240, 255, 0.8);
+        overflow: hidden;
+      }
+      .large-size {
+        font-size: 32px;
+        padding: 2px 14px;
+        cursor: pointer;
+      }
+
+      .building-btn::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background: linear-gradient(45deg, transparent, #00f0ff, transparent);
+        opacity: 0;
+        transition: opacity 0.5s;
+        animation: pulse 3s infinite alternate;
+      }
+
+      .building-btn:hover::before {
+        opacity: 0.6;
+      }
+
+      .building-btn:hover {
+        transform: translate(-50%, -50%) scale(1.12);
+        box-shadow:
+          0 0 35px rgba(0, 240, 255, 0.8),
+          0 0 60px rgba(0, 240, 255, 0.4);
+        border-color: #00f0ff;
+        background: rgba(0, 240, 255, 0.12);
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      #pano {
+        width: 100%;
+        height: 100%;
+        display: none;
+        transition: opacity 1s ease;
+      }
+
+      #back-btn {
+        position: absolute;
+        top: 20px;
+        left: 40px;
+        z-index: 30;
+        padding: 12px 24px;
+        background: rgba(3, 61, 220, 0.2);
+        border: 1px solid #0933ed;
+        color: #2912fa;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 0 20px rgba(2, 77, 240, 0.5);
+        display: none;
+        transition: all 0.4s;
+      }
+
+      #back-btn:hover {
+        box-shadow: 0 0 40px rgba(3, 61, 220, 0.8);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <img id="map" src="./page.jpg" alt="学校俯视图" />
+
+      <!-- 按钮位置已用你提供的示例值，可继续微调 -->
+      <button
+        class="building-btn large-size"
+        style="left: 53%; top: 27%"
+        onclick="enterPano('computer')"
+      >
+        👆
+      </button>
+      <button
+        class="building-btn large-size"
+        style="left: 42%; top: 50%"
+        onclick="enterPano('gym')"
+      >
+        👆
+      </button>
+      <button
+        class="building-btn large-size"
+        style="left: 31%; top: 78%"
+        onclick="enterPano('dance')"
+      >
+        👆
+      </button>
+
+      <button
+        class="building-btn large-size"
+        style="left: 75%; top: 28%"
+        onclick="enterPano('eat')"
+      >
+        👆
+      </button>
+      <button class="building-btn" style="left: 58%; top: 58%">学校大门</button>
+
+      <div id="pano"></div>
+    </div>
+
+    <button id="back-btn" onclick="backToMap()">← 返回学校地图</button>
+
+    <script>
+      let viewer = null;
+
+      function enterPano(sceneKey) {
+        const map = document.getElementById("map");
+        map.style.opacity = "0";
+        map.style.transform = "scale(0.98)";
+
+        document.querySelectorAll(".building-btn").forEach((btn) => {
+          btn.style.opacity = "0";
+          btn.style.transform = "translate(-50%, -50%) scale(0.9)";
+        });
+
+        setTimeout(() => {
+          map.style.display = "none";
+          document.getElementById("pano").style.display = "block";
+          document.getElementById("pano").style.opacity = "1";
+
+          document.getElementById("back-btn").style.display = "block";
+
+          if (viewer) viewer.destroy();
+
+          viewer = pannellum.viewer("pano", {
+            type: "equirectangular",
+            panorama: getPanoUrl(sceneKey),
+            autoLoad: true,
+            autoRotate: -1.2,
+            hfov: 100,
+            // 自定义控件颜色为 neon cyan
+            compass: true,
+            showZoomCtrl: true,
+            showFullscreenCtrl: true,
+            // 可以进一步自定义 CSS 覆盖 pannellum 默认控件颜色
+          });
+        }, 600);
+      }
+
+      function backToMap() {
+        if (viewer) {
+          viewer.destroy();
+          viewer = null;
+        }
+
+        document.getElementById("pano").style.opacity = "0";
+        document.getElementById("back-btn").style.display = "none";
+        setTimeout(() => {
+          document.getElementById("pano").style.display = "none";
+          const map = document.getElementById("map");
+          map.style.display = "block";
+          map.style.opacity = "1";
+          map.style.transform = "scale(1)";
+
+          document.querySelectorAll(".building-btn").forEach((btn) => {
+            btn.style.opacity = "1";
+            btn.style.transform = "translate(-50%, -50%) scale(1)";
+          });
+        }, 800);
+      }
+
+      function getPanoUrl(key) {
+        const urls = {
+          computer: "./computer.jpg",
+          gym: "./gym.jpg",
+          dance: "./dance.jpg",
+          eat: "./eat.jpg",
+        };
+        return urls[key] || "https://pannellum.org/images/bma-0.jpg";
+      }
+    </script>
+  </body>
+</html>
