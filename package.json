@@ -1,0 +1,22 @@
+{
+  "name": "school",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "gh-pages -d ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hfxiang93/school.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hfxiang93/school/issues"
+  },
+  "homepage": "https://github.com/hfxiang93/school#readme",
+  "dependencies": {
+    "gh-pages": "^6.3.0"
+  }
+}
